@@ -3,7 +3,7 @@ name: Auto Update Vietlott Data
 on:
   schedule:
     # Chạy tự động lúc 12:00 UTC (19:00 giờ Việt Nam)
-    - cron: '0 12 * * *'
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
