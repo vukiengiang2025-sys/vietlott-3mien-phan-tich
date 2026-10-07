@@ -2,9 +2,9 @@ name: Auto Update Vietlott Data
 
 on:
   schedule:
-    # Chạy tự động lúc 12:00 UTC (19:00 giờ Việt Nam - sau giờ mở thưởng Vietlott)
+    # Chạy tự động lúc 12:00 UTC (19:00 giờ Việt Nam)
     - cron: '0 12 * * *'
-  workflow_dispatch: # Cho phép bấm nút chạy thủ công trên giao diện GitHub
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -27,6 +27,14 @@ jobs:
       - name: Run Update & Clean Script
         run: |
           python update_and_clean.py
+
+      # BƯỚC MỚI: Gửi vé thông minh qua Telegram
+      - name: Send Smart Tickets to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python send_telegram.py
 
       - name: Commit and Push Changes
         run: |
