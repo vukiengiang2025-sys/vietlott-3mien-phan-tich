@@ -1,13 +1,13 @@
-name: Auto Update Vietlott & XSMB Data
+name: 18h30 - Report XSMB XSMT XSMN
 
 on:
   schedule:
-    # 00:00 UTC = 07:00 AM giờ Việt Nam
-    - cron: '0 0 * * *'
+    # 11:30 UTC = 18:30 giờ Việt Nam
+    - cron: '30 11 * * *'
   workflow_dispatch:
 
 jobs:
-  update-data:
+  report-3mien:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,21 +24,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Fetch and Clean Data
+      - name: Fetch Latest Data
         run: |
           python scripts/fetch_data.py
 
-      - name: Send Analytics Report to Telegram
+      - name: Send 3-Mien Report to Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python scripts/send_telegram.py
+          python scripts/send_3mien.py
 
-      - name: Commit and Push Changes
+      - name: Commit and Push Updated Data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff-index --quiet HEAD || git commit -m "bot: Tự động cập nhật dữ liệu Vietlott & XSMB [skip ci]"
+          git diff-index --quiet HEAD || git commit -m "bot: Cập nhật dữ liệu Xổ số 3 Miền [skip ci]"
           git push
