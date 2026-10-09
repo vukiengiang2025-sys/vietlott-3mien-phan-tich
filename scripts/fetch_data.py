@@ -5,19 +5,20 @@ from rich.console import Console
 
 console = Console()
 
-# Nguồn dữ liệu
+# Nguồn dữ liệu API 3 Miền & Vietlott
 URL_MEGA = "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power645.jsonl"
 URL_POWER = "https://raw.githubusercontent.com/vietvudanh/vietlott-data/main/data/power655.jsonl"
 URL_XSMB = "https://raw.githubusercontent.com/khiemdoan/vietnam-lottery-xsmb-analysis/main/data/xsmb.json"
 
-# Đường dẫn lưu file
-PATH_MEGA_CLEAN = "data/vietlott/mega645_clean.txt"
-PATH_POWER_CLEAN = "data/vietlott/power655_clean.txt"
-PATH_XSMB_JSON = "data/xsmb/xsmb.json"
+# Nguồn dữ liệu XSMT & XSMN (aloha123890 repository)
+URL_XSMT = "https://raw.githubusercontent.com/aloha123890/vietnam-lottery/main/data/xsmt.json"
+URL_XSMN = "https://raw.githubusercontent.com/aloha123890/vietnam-lottery/main/data/xsmn.json"
 
 def ensure_dirs():
     os.makedirs("data/vietlott", exist_ok=True)
     os.makedirs("data/xsmb", exist_ok=True)
+    os.makedirs("data/xsmt", exist_ok=True)
+    os.makedirs("data/xsmn", exist_ok=True)
 
 def download_file(url, local_path):
     try:
@@ -48,26 +49,20 @@ def convert_vietlott_jsonl(input_jsonl, output_txt):
 
 def run_pipeline():
     ensure_dirs()
-    # Fetch Vietlott
+    # 1. Fetch & Clean Vietlott
     download_file(URL_MEGA, "data/vietlott/power645.jsonl")
     download_file(URL_POWER, "data/vietlott/power655.jsonl")
-    convert_vietlott_jsonl("data/vietlott/power645.jsonl", PATH_MEGA_CLEAN)
-    convert_vietlott_jsonl("data/vietlott/power655.jsonl", PATH_POWER_CLEAN)
-def run_pipeline():
-    ensure_dirs()
-    # Fetch & Clean Vietlott
-    download_file(URL_MEGA, "data/vietlott/power645.jsonl")
-    download_file(URL_POWER, "data/vietlott/power655.jsonl")
-    convert_vietlott_jsonl("data/vietlott/power645.jsonl", PATH_MEGA_CLEAN)
-    convert_vietlott_jsonl("data/vietlott/power655.jsonl", PATH_POWER_CLEAN)
+    convert_vietlott_jsonl("data/vietlott/power645.jsonl", "data/vietlott/mega645_clean.txt")
+    convert_vietlott_jsonl("data/vietlott/power655.jsonl", "data/vietlott/power655_clean.txt")
     
-    # Xóa file thô tạm thời
     for tmp_file in ["data/vietlott/power645.jsonl", "data/vietlott/power655.jsonl"]:
         if os.path.exists(tmp_file):
             os.remove(tmp_file)
 
-    # Fetch XSMB
-    download_file(URL_XSMB, PATH_XSMB_JSON)    
+    # 2. Fetch 3 Miền (XSMB - XSMT - XSMN)
+    download_file(URL_XSMB, "data/xsmb/xsmb.json")
+    download_file(URL_XSMT, "data/xsmt/xsmt.json")
+    download_file(URL_XSMN, "data/xsmn/xsmn.json")
 
 if __name__ == "__main__":
     run_pipeline()

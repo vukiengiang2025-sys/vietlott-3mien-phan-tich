@@ -3,11 +3,10 @@ import sys
 import urllib.request
 import urllib.parse
 
-# Thêm thư mục gốc vào path để import các models
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from models.vietlott_analytics_hub import VietlottAnalyzer
-from models.xsmb_analyzer import XSMBAnalyzer
+from models.xsm3mien_analyzer import LotteryRegionAnalyzer
 
 def send_telegram_message(bot_token, chat_id, text):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -20,9 +19,20 @@ def send_telegram_message(bot_token, chat_id, text):
     try:
         req = urllib.request.Request(url, data=payload)
         with urllib.request.urlopen(req) as response:
-            print("✅ Đã gửi thông báo Telegram thành công!")
+            print("✅ Đã gửi báo cáo Telegram 3 Miền thành công!")
     except Exception as e:
         print(f"❌ Lỗi gửi Telegram: {e}")
+
+def format_region_report(region_name, analyzer):
+    prizes = analyzer.get_latest_prizes()
+    heads, tails = analyzer.analyze_head_tail(prizes)
+    lo_gan = analyzer.analyze_lo_gan()
+    top_gan = list(lo_gan.items())[:3]
+    
+    report = f"📍 *{region_name}:*\n"
+    report += f"  • Đầu câm: `{', '.join(heads) if heads else 'Không'}` | Đuôi câm: `{', '.join(tails) if tails else 'Không'}`\n"
+    report += f"  • Top Lô Gan: " + ", ".join([f"`{k}` ({v}kỳ)" for k, v in top_gan]) + "\n"
+    return report
 
 def main():
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -32,7 +42,18 @@ def main():
         print("⚠️ Thiếu TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID.")
         return
 
-    # 1. PHÂN TÍCH VIETLOTT
+    # 1. BÁO CÁO XỔ SỐ 3 MIỀN
+    xsmb = LotteryRegionAnalyzer("Miền Bắc (XSMB)", "data/xsmb/xsmb.json")
+    xsmt = LotteryRegionAnalyzer("Miền Trung (XSMT)", "data/xsmt/xsmt.json")
+    xsmn = LotteryRegionAnalyzer("Miền Nam (XSMN)", "data/xsmn/xsmn.json")
+
+    msg = "🇻🇳 *BÁO CÁO XỔ SỐ 3 MIỀN & VIETLOTT* 🇻🇳\n\n"
+    msg += "🔥 *PHÂN TÍCH XỔ SỐ 3 MIỀN*\n"
+    msg += format_region_report("XSMB", xsmb) + "\n"
+    msg += format_region_report("XSMT", xsmt) + "\n"
+    msg += format_region_report("XSMN", xsmn) + "\n"
+
+    # 2. BÁO CÁO VIETLOTT
     analyzer_mega = VietlottAnalyzer("Mega 6/45", 45, "data/vietlott/mega645_clean.txt")
     analyzer_power = VietlottAnalyzer("Power 6/55", 55, "data/vietlott/power655_clean.txt")
 
@@ -58,38 +79,14 @@ def main():
             tickets.append(ticket)
         return tickets
 
-    mega_tickets = get_tickets(analyzer_mega)
-    power_tickets = get_tickets(analyzer_power)
-
-    # 2. PHÂN TÍCH XSMB
-    xsmb = XSMBAnalyzer("data/xsmb/xsmb.json")
-    latest_prizes = xsmb.get_latest_prizes()
-    heads_cam, tails_cam = xsmb.analyze_head_tail(latest_prizes)
-    lo_gan = xsmb.analyze_lo_gan()
-    top_gan = list(lo_gan.items())[:5]
-
-    # 3. SOẠN TIN NHẮN TỔNG HỢP
-    msg = "🎰 *BÁO CÁO PHÂN TÍCH XỔ SỐ TỔNG HỢP* 🎰\n\n"
-    
-    # Block XSMB
-    msg += "🔴 *XỔ SỐ MIỀN BẮC (XSMB):*\n"
-    msg += f"• Đầu câm: `{', '.join(heads_cam) if heads_cam else 'Không có'}`\n"
-    msg += f"• Đuôi câm: `{', '.join(tails_cam) if tails_cam else 'Không có'}`\n"
-    msg += "• Top 5 Lô Gan:\n"
-    for num, count in top_gan:
-        msg += f"  - Số `{num}`: gan `{count}` kỳ\n"
-    msg += "\n"
-
-    # Block Vietlott
-    msg += "🔵 *VIETLOTT MEGA 6/45 - Top 5 Vé Gợi Ý:*\n"
-    for idx, t in enumerate(mega_tickets, 1):
-        t_str = " - ".join(f"{x:02d}" for x in t)
-        msg += f"`{idx}. {t_str}` (Tổng: {sum(t)})\n"
+    msg += "🎰 *VÉ THÔNG MINH VIETLOTT*\n"
+    msg += "🔴 *Mega 6/45:*\n"
+    for idx, t in enumerate(get_tickets(analyzer_mega), 1):
+        msg += f"`{idx}. {' - '.join(f'{x:02d}' for x in t)}` (Tổng: {sum(t)})\n"
         
-    msg += "\n🟣 *VIETLOTT POWER 6/55 - Top 5 Vé Gợi Ý:*\n"
-    for idx, t in enumerate(power_tickets, 1):
-        t_str = " - ".join(f"{x:02d}" for x in t)
-        msg += f"`{idx}. {t_str}` (Tổng: {sum(t)})\n"
+    msg += "\n🔵 *Power 6/55:*\n"
+    for idx, t in enumerate(get_tickets(analyzer_power), 1):
+        msg += f"`{idx}. {' - '.join(f'{x:02d}' for x in t)}` (Tổng: {sum(t)})\n"
 
     send_telegram_message(bot_token, chat_id, msg)
 
