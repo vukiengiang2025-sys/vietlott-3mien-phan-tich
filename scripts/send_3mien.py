@@ -25,10 +25,15 @@ def format_region_report(region_name, analyzer):
     heads, tails = analyzer.analyze_head_tail(prizes)
     lo_gan = analyzer.analyze_lo_gan()
     top_gan = list(lo_gan.items())[:3]
+    top_xien2 = analyzer.analyze_lo_xien_2(limit_draws=30, top_k=3)
     
     report = f"📍 *{region_name}:*\n"
     report += f"  • Đầu câm: `{', '.join(heads) if heads else 'Không'}` | Đuôi câm: `{', '.join(tails) if tails else 'Không'}`\n"
     report += f"  • Top Lô Gan: " + ", ".join([f"`{k}` ({v}kỳ)" for k, v in top_gan]) + "\n"
+    
+    # Định dạng chuỗi hiển thị Lô Xiên 2
+    xien_str_list = [f"`{p[0]}-{p[1]}` ({cnt}lần)" for p, cnt in top_xien2]
+    report += f"  • Top Xiên 2 (30 kỳ): " + ", ".join(xien_str_list) + "\n"
     return report
 
 def main():
