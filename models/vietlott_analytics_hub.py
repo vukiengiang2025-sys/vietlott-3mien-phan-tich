@@ -254,9 +254,9 @@ def main_menu():
     mega_path = "mega645_clean.txt"
     power_path = "power655_clean.txt"
     
-    analyzer_mega = VietlottAnalyzer("Mega 6/45", 45, mega_path)
-    analyzer_power = VietlottAnalyzer("Power 6/55", 55, power_path)
-
+    # Sửa lại tham số khởi tạo VietlottAnalyzer
+    analyzer_mega = VietlottAnalyzer("Mega 6/45", 45, "data/vietlott/mega645_clean.txt")
+    analyzer_power = VietlottAnalyzer("Power 6/55", 55, "data/vietlott/power655_clean.txt")
     while True:
         console.clear()
         console.print(Panel.fit(
